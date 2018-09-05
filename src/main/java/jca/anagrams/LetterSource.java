@@ -1,4 +1,4 @@
-package jca.wordgame;
+package jca.anagrams;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

@@ -1,10 +1,22 @@
-package jca.wordgame;
+package jca.anagrams;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+
+import jca.anagrams.AnagramSolvingService.AnagramFinder;
 
 /**
  * The simplest word list I've found that includes inflections is the 2d12 dictionary with a link from the SCOWL site.
@@ -31,6 +43,25 @@ import java.util.Set;
  * http://wordlist.aspell.net/12dicts-readme/
  *
  * Anagram solver I've been using: http://www.thewordfinder.com/anagram-solver/
+ * it highlights the wildcard letters which is nice
+ *
+ * 9/4/2018 -- I want to make a game analyzer feature where I can setup situations directly.
+ * For example, after a real game, I can enter tiles in the pot, and words that players have. Then I can have it display a list
+ * of all words. Words that are stolen will be formatted like "reduction + s -> discounter/introduces"
+ * It would also be nice to have a letter counter for each player
+ *
+ * A replay history would also be nice
+ *
+ * An ingame "hint" button would be nice. Perhaps one could just be making anagrams out of existing words.
+ * Another can be for finding steals and new words by including the pot.
+ * Maybe even more finegrained: "find 1 letter additions", "find 2 letter additions" which would be based on available letters
+ * in the middle, and then it would use the arrow notation to show every word that can be transformed with new tiles
+ * (no + if just an anagram).
+ *
+ * The next hint button would show how likely existing words are to be stealable. This would be based on potential one letter
+ * additions (so go through whole alphabet for each existing word to find one letter additions). Then I can either show all of them,
+ * or show words that have a greater than x% chance of being stealable (based on either base distribution, or current ingame distribution
+ * with tiles already taken).
  *
  * Created by janstett on 1/19/17.
  */
@@ -41,14 +72,25 @@ public class GameLauncher {
     int MINIMUM_WORD_LENGTH = 4;
     Set<String> dictionary = populateDictionary();
 
-    System.out.println("Enter 'p' to flip a tile! \nType a word to claim it!");
-
-    boolean gameRunning = true;
-
+    System.out.println("Building game");
+    Instant startTime = Instant.now();
+    AnagramFinder anagramFinder = new AnagramFinder(dictionary); // eventually, either inject, or use an anagram module api instead of directly accessing anagram finder methods
+    Map<String, Set<String>> sortedMultiplicityAnagramMap = anagramFinder.buildMultiplicityFilteredAnagramMap();
+    Map<String, Set<String>> sortedWordLengthAnagramMap = anagramFinder.buildLengthFilteredAnagramMap();
     LetterSource letterSource = new LetterSource();
     LetterCollection inPlay = new LetterCollection();
     inPlay.setDisplayType(LetterCollection.DisplayType.LARGE);
     WordCollection myWords = new WordCollection();
+    Instant endTime = Instant.now();
+    System.out.println(String.format("Game built in %s nanoseconds", (Duration.between(startTime, endTime).getNano())));
+
+
+    System.out.println("Enter 'p' to flip a tile! \nType a word to claim it!");
+
+
+    boolean gameRunning = true;
+
+
 
     while (gameRunning) {
       String userInput = input.nextLine();
@@ -84,11 +126,41 @@ public class GameLauncher {
           displayBoard(inPlay, myWords);
           break;
 
+        case "-hint":
+          Map<String, Set<String>> anagramsByCombo = anagramFinder.findSubAnagrams(inPlay.getAllLettersAsString());
+          if (anagramsByCombo.isEmpty()) {
+            System.out.println("There are no words in the middle");
+          } else {
+            System.out.println("There are " + anagramsByCombo.size() + " combinations in the middle.");
+          }
+          displayBoard(inPlay, myWords);
+          break;
+        case "-show combos":
+          anagramsByCombo = anagramFinder.findSubAnagrams(inPlay.getAllLettersAsString());
+          if (anagramsByCombo.isEmpty()) {
+            System.out.println("There are no combos in the middle");
+          } else {
+            for (String combo: anagramsByCombo.keySet()) {
+              System.out.println(combo);
+            }
+          }
+          displayBoard(inPlay, myWords);
+          break;
+        case "-show words":
+          anagramsByCombo = anagramFinder.findSubAnagrams(inPlay.getAllLettersAsString());
+          if (anagramsByCombo.isEmpty()) {
+            System.out.println("There are no words in the middle");
+          } else {
+            for (Set<String> anagrams : anagramsByCombo.values()) {
+              System.out.println(anagrams.stream().collect(Collectors.joining(" ")));
+              }
+            }
+          displayBoard(inPlay, myWords);
+          break;
         case "e":
         case "q":
           gameRunning = false;
           break;
-
         default:
           if (userInput.length() >= MINIMUM_WORD_LENGTH) {
             String word = userInput.toUpperCase();
@@ -133,6 +205,23 @@ public class GameLauncher {
     }
     return dictionary;
     }
+
+    // improved dictionary builder, get it to find path correctly (ideally without needing full path, for portability)
+
+  // eventually replace this "monolith" class version. Should the client receive its own version of the dictionary, or call this module everytime?
+  // I'm not distributing the system, so I don't have to worry about network stuff. I'm just trying to practice good modularization.
+
+  private Set<String> buildDictionary() {
+    List<String> wordList;
+    try {
+      wordList = Files.readAllLines(new File("wordlist").toPath(), Charset.defaultCharset());
+    } catch (IOException e) {
+      wordList = Collections.emptyList();
+    }
+    return new HashSet(wordList);
+  }
+
+
 }
 
 

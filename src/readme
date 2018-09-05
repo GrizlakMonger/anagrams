@@ -2,7 +2,12 @@
 For looking for anagrams
 https://www.thewordfinder.com/anagram-solver/
 
+Look here for getting permutations:
+https://stackoverflow.com/questions/4504974/how-to-iteratively-generate-k-elements-subsets-from-a-set-of-size-n-in-java
 
+Easter egg for study:
+run in debugger and look at the filtered anagram map entries. Not an exhaustive English dictionary, but a very broad one, without much controversy
+You can glimpse at the key and try to figure out the anagrams before revealing.
 
 Strategy stuff:
 crazy 4 character words

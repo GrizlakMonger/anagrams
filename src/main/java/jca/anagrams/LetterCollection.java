@@ -1,8 +1,9 @@
-package jca.wordgame;
+package jca.anagrams;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by janstett on 1/25/17.
@@ -37,6 +38,12 @@ public class LetterCollection {
   public boolean contains(String word) {
     List<Character> tempCharacters = new ArrayList<>(characters);
     return removeWordFromCharacterList(word, tempCharacters);
+  }
+
+  public String getAllLettersAsString() {
+    return characters.stream()
+        .map(String::valueOf)
+        .collect(Collectors.joining());
   }
 
   private boolean removeWordFromCharacterList(String word, List<Character> characters) {
