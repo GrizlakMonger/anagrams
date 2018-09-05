@@ -6,8 +6,15 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
+ * This class represents a collection of letters that have no meaningful order or partitions.
+ * For now, this is being used to represent all of the letters available in the middle.
+ * Because there are duplicate tiles, a set is not appropriate.
+ * A letter collection is DISTINCT from a word, in that words are bounded and stay together as
+ * letter combinations once they are formed.
+ *
  * Created by janstett on 1/25/17.
  */
+
 public class LetterCollection {
   private List<Character> characters = new ArrayList<>();
   private DisplayType displayType = DisplayType.PLAIN;

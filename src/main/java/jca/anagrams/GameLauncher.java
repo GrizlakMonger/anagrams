@@ -63,6 +63,44 @@ import jca.anagrams.AnagramSolvingService.AnagramFinder;
  * or show words that have a greater than x% chance of being stealable (based on either base distribution, or current ingame distribution
  * with tiles already taken).
  *
+ * I don't need to divide words by "player" for now. For the word finding I want to do, I don't necessarily need that concept, and
+ * can treat all words as being in a common pot. Eventually, I can have a player/team int value that goes with each word.
+ * Each team won't even necessarily need its own collection of words. The words themselves will "know" what team they belong to,
+ * and that value changes as the word is transformed and recaptured.
+ *
+ * Once I keep track of a letter combination's history, I can mark off anagrams as they are used, so they can't be reclaimed.
+ * I can also at least do a simple plural check heuristic, where a word with a simple -s/-es ending on a used variation doesn't count.
+ * This is nice because it handles many plural nouns and also third person present progressive verbs. It doesn't rule
+ * out all plurals, and of course there are still plenty of word variations that normally are disallowed that get through
+ * (requiring user memory/judgment to avoid those combos). A word "undo" feature would be nice, in case an anagram is realized to be
+ * an invalid variation based on word combo history.
+ *
+ * Eventually also log every peel and word capture/transformation. These can be saved and replayed. Can even replay live games
+ * with this feature in custom mode, where you input the "peel" values manually.
+ *
+ * If in the future there's a case where 2 players own the same word combo, and a player makes an anagram of one or steals with an addition,
+ * the system can mention that the word exists with two different owners, and ask which owner you want to take from.
+ *
+ * The full analysis display will first display all new words from the middle, then anagrams of existing words, then extensions
+ * on existing words (possibly separate by number of additional tiles required), then finally whole word combinations (with additional letters).
+ *
+ * A "potential word hint" will give possible words given the addition of one or two characters (or given the combination of existing words
+ * with one or two new characters: a case that seems near impossible to pull off in game, but would be interesting to see).
+ *
+ * Can use this same basic format for both available plays, and future potential plays, just label above as available or speculative.
+ * Speculative will have a different symbol (not +) to indicate that the character isn't available yet, since some speculative
+ * will involve a full word, then available letters (indicated by '+') and then speculative, maybe after '?' or '&', or ':'
+ * Letters from the middle are separated by spaces, whereas if you added a whole word, the letters would go together.
+ * AVAILABLE:
+ *  -> tike kite
+ *  spear -> pears spare  (only shows unused anagrams in that letter combo history)
+ *  join + t -> joint
+ *  avenger + s c -> scavenger
+ *
+ *  SPECULATIVE:
+ *  : s -> snug guns
+ *
+ *
  * Created by janstett on 1/19/17.
  */
 public class GameLauncher {
@@ -90,6 +128,8 @@ public class GameLauncher {
 
     boolean gameRunning = true;
 
+    int hintLevel = 0;
+
 
 
     while (gameRunning) {
@@ -99,6 +139,7 @@ public class GameLauncher {
           System.out.println("p : peel - reveal another character from tiles");
           System.out.println("dp, ds, dl : switch between plain, small, or large display style");
           System.out.println("q, e : quit/exit");
+          System.out.println("h : next hint for current board");
           break;
         case "p": //as in "peel"
           Character nextCharacter = letterSource.nextCharacter();
@@ -108,6 +149,7 @@ public class GameLauncher {
             inPlay.add(nextCharacter);
             System.out.println("New letter: " + nextCharacter);
           }
+          hintLevel = 0;
           displayBoard(inPlay, myWords);
           break;
         case "dp": // as in display-plain
@@ -126,16 +168,42 @@ public class GameLauncher {
           displayBoard(inPlay, myWords);
           break;
 
-        case "-hint":
+          // I could also make this a progressive case, where there is a counter: first hint just lets you know there are words,
+        // second time (in same turn) tells you how many combos there are, third time shows the combos, fourth time shows the words
+        // eventually have separate hint categories in message, eg: "3 new combos, and 2 anagrams of current words, and 1 extension of current word"
+        case "h":
           Map<String, Set<String>> anagramsByCombo = anagramFinder.findSubAnagrams(inPlay.getAllLettersAsString());
           if (anagramsByCombo.isEmpty()) {
             System.out.println("There are no words in the middle");
           } else {
-            System.out.println("There are " + anagramsByCombo.size() + " combinations in the middle.");
+            switch (hintLevel) {
+              case 0:
+                System.out.println("There is something there.");
+                break;
+              case 1:
+                if (anagramsByCombo.size() == 1) {
+                  System.out.println("There is one combination available.");
+                } else {
+                  System.out.println("There are " + anagramsByCombo.size() + " combinations in the middle.");
+                }
+                break;
+              case 2:
+                for (String combo: anagramsByCombo.keySet()) {
+                  System.out.println(combo);
+                }
+                break;
+              case 3:
+                for (Set<String> anagrams : anagramsByCombo.values()) {
+                  System.out.println(anagrams.stream().collect(Collectors.joining(" ")));
+                }
+                hintLevel -= 1; // hacky way of keeping the value at case 3 once it's there
+                break;
+            }
           }
+          hintLevel += 1;
           displayBoard(inPlay, myWords);
           break;
-        case "-show combos":
+        case "-combos":
           anagramsByCombo = anagramFinder.findSubAnagrams(inPlay.getAllLettersAsString());
           if (anagramsByCombo.isEmpty()) {
             System.out.println("There are no combos in the middle");
@@ -146,7 +214,7 @@ public class GameLauncher {
           }
           displayBoard(inPlay, myWords);
           break;
-        case "-show words":
+        case "-words":
           anagramsByCombo = anagramFinder.findSubAnagrams(inPlay.getAllLettersAsString());
           if (anagramsByCombo.isEmpty()) {
             System.out.println("There are no words in the middle");
@@ -188,6 +256,7 @@ public class GameLauncher {
     System.out.println();
     if (!myWords.isEmpty()) {
       System.out.println("Your words: \n" + myWords);
+      System.out.println();
     }
   }
 
