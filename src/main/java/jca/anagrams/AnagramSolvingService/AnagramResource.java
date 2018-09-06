@@ -5,4 +5,5 @@ package jca.anagrams.AnagramSolvingService;
 public class AnagramResource {
 
 
+
 }

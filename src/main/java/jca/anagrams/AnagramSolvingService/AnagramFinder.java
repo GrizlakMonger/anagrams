@@ -4,13 +4,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.commons.math3.util.Combinations;
 
 import static java.util.stream.Collectors.*;
 import static java.util.function.Function.identity;
+import static jca.anagrams.utils.WordUtils.sortString;
 
 public class AnagramFinder {
 
@@ -42,14 +43,13 @@ public class AnagramFinder {
   // https://www.javacodegeeks.com/2015/11/java-8-streams-api-grouping-partitioning-stream.html
 
   public AnagramFinder(Set<String> dictionary) {
-    this.dictionary = dictionary;
+    this.dictionary = dictionary; //dictionary might not actually matter, since the anagram map shows existence
     this.anagramMap = buildAnagramMap(dictionary);
   }
 
   final private Set<String> dictionary;
   final private Map<String, Set<String>> anagramMap;
   private int minimumWordLength = 4;
-  private int maximumWordLength = 22; // based on the wordlist I'm using, this is the length of the longest word, might not be worth even using a max
 
   public Map<String, Set<String>> buildAnagramMap(Set<String> dictionary) {
     Map<String, Set<String>> anagramMap =
@@ -59,11 +59,17 @@ public class AnagramFinder {
     return anagramMap;
   }
 
-  private static String sortString(String unsortedString) {
-    char[] chars = unsortedString.toCharArray();
-    Arrays.sort(chars);
-    return new String(chars);
+  // must call this method with a valid word (meaning its confirmed in dictionary and word size)
+  // since this is only called during construction of right sized word
+  public Set<String> findAnagrams(String word) {
+    if (word.length() < minimumWordLength) {
+      return Collections.emptySet();
+    }
+    String sortedWord = sortString(word);
+    Optional<Set<String>> possibleAnagrams = Optional.ofNullable(anagramMap.get(sortedWord));
+    return possibleAnagrams.orElse(Collections.emptySet());
   }
+
 
   // I only need to find SORTED subanagrams, since I can check against the subanagram map if a potential new word is available (don't need to check actual dictionary)
   // (I don't need all permutations, only sorted combinations! This saves a lot of resources!)
@@ -118,8 +124,8 @@ public class AnagramFinder {
   }
 
   public Map<String, Set<String>> buildLengthFilteredAnagramMap() {
-    int minimumWordLength = 22;   //6,5 is a good combo, crazy long words, 9/3 is for really long words
-    int minimumAnagrams = 1;
+    int minimumWordLength = 9;   //6,5 is a good combo, crazy long words, 9/3 is for really long words
+    int minimumAnagrams = 3;
     Map<String, Set<String>> sortedAnagramMap =
         this.anagramMap
             .entrySet().stream()
