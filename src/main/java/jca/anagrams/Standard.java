@@ -28,7 +28,7 @@ public class Standard  {
 
   public void play() {
     System.out.println("Enter 'p' to flip a tile! \nType a word to claim it!");
-    WordCollection myWords = new WordCollection();
+    WordCollection myWords = new WordCollection(anagramFinder);
     boolean gameRunning = true;
     int hintLevel = 0;
     while (gameRunning) {
