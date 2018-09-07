@@ -2,52 +2,65 @@ package jca.anagrams.AnagramSolvingService;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.apache.commons.math3.util.Combinations;
 
+import jca.anagrams.MergeAttempt;
+
 import static java.util.stream.Collectors.*;
 import static java.util.function.Function.identity;
 import static jca.anagrams.utils.WordUtils.sortString;
 
+// https://stackoverflow.com/questions/5343689/java-reading-a-file-into-an-arraylist
+// the word list to use should not be hardcoded. It should be changeable from the ui.
+// Should this maintain state, or should the desired word list name be passed to the endpoint each call?
+// That could be expensive to load each possible dictionary every api call (so we'd obviously want to cache each one).
+// There aren't too many possible dictionaries, and maybe I can even use an enum corresponding to each dictionary.
+// Same for letter distributions.
+
+// I also want to make a bot that grabs words asap and run a simulation to see the most common words.
+// I'll also do this with a simpler dictionary to avoid borderline/obscure words.
+
+// THIS SERVICE SHOULD NOT HAVE THE DICTIONARY! It uses the dictionary but shouldn't have its own.
+// For now, it can use its own, but eventually it should make use of the dictionary service when doing checks.
+// Obviously I don't actually want to use network calls, but for this project I want to try to use modules well.
+// Bob Martin is big on modules it seems, all the benefits of microservices without the hassle.
+
+// So I don't want to just expose things between modules.
+
+// 9/04/2018 - I decided to just look up permutation/anagram algorithms because I don't want to spend to much time on this.
+// I was on completely wrong track. You shouldn't dynamically list every anagram and then check each entry.
+// Since there are far more invalid permutations than valid, it makes more sense to start with the dictionary.
+// Any anagram-group can be uniquely identified by a sorted version of itself. DUH! Have a set of
+// valid character collections mapped to each of the possible words
+
+// Then I remembered there's a stream method for this and found it:
+// https://www.javacodegeeks.com/2015/11/java-8-streams-api-grouping-partitioning-stream.html
 public class AnagramFinder {
 
+  private static AnagramFinder INSTANCE;
 
-  // https://stackoverflow.com/questions/5343689/java-reading-a-file-into-an-arraylist
-  // the word list to use should not be hardcoded. It should be changeable from the ui.
-  // Should this maintain state, or should the desired word list name be passed to the endpoint each call?
-  // That could be expensive to load each possible dictionary every api call (so we'd obviously want to cache each one).
-  // There aren't too many possible dictionaries, and maybe I can even use an enum corresponding to each dictionary.
-  // Same for letter distributions.
+  public static AnagramFinder buildAnagramFinder(Set<String> dictionary) {
+    if (INSTANCE == null) {
+      INSTANCE = new AnagramFinder(dictionary);
+    }
+    return INSTANCE;
+  }
 
-  // I also want to make a bot that grabs words asap and run a simulation to see the most common words.
-  // I'll also do this with a simpler dictionary to avoid borderline/obscure words.
+  public AnagramFinder getAnagramFinder() {
+    return INSTANCE;
+  }
 
-  // THIS SERVICE SHOULD NOT HAVE THE DICTIONARY! It uses the dictionary but shouldn't have its own.
-  // For now, it can use its own, but eventually it should make use of the dictionary service when doing checks.
-  // Obviously I don't actually want to use network calls, but for this project I want to try to use modules well.
-  // Bob Martin is big on modules it seems, all the benefits of microservices without the hassle.
-
-  // So I don't want to just expose things between modules.
-
-  // 9/04/2018 - I decided to just look up permutation/anagram algorithms because I don't want to spend to much time on this.
-  // I was on completely wrong track. You shouldn't dynamically list every anagram and then check each entry.
-  // Since there are far more invalid permutations than valid, it makes more sense to start with the dictionary.
-  // Any anagram-group can be uniquely identified by a sorted version of itself. DUH! Have a set of
-  // valid character collections mapped to each of the possible words
-
-  // Then I remembered there's a stream method for this and found it:
-  // https://www.javacodegeeks.com/2015/11/java-8-streams-api-grouping-partitioning-stream.html
-
-  public AnagramFinder(Set<String> dictionary) {
-    this.dictionary = dictionary; //dictionary might not actually matter, since the anagram map shows existence
+  private AnagramFinder(Set<String> dictionary) {
     this.anagramMap = buildAnagramMap(dictionary);
   }
 
-  final private Set<String> dictionary;
   final private Map<String, Set<String>> anagramMap;
   private int minimumWordLength = 4;
 
@@ -84,16 +97,16 @@ public class AnagramFinder {
     inputLetters = inputLetters.toLowerCase();
     char[] letters = inputLetters.toCharArray();
     Arrays.sort(letters);
-    Set<String> sortedPermutations = new HashSet();
+    Set<String> sortedCombinations = new HashSet();
     
     for (int k = minimumWordLength;  k <= numberOfLetters; k += 1) {
       // extract this loop? I will end up with an array of indices, and grab the indices of the input letters to put in a set
       for (Iterator<int[]> combinationIterator = new Combinations(numberOfLetters, k).iterator(); combinationIterator.hasNext(); ) {
-        sortedPermutations.add(getSubStringByIndices(letters, combinationIterator.next()));
+        sortedCombinations.add(getSubStringByIndices(letters, combinationIterator.next()));
       }
     }
 
-    Set<String> validLetterCombos = sortedPermutations.stream()
+    Set<String> validLetterCombos = sortedCombinations.stream()
         .filter(p -> anagramMap.containsKey(p))
         .collect(toSet());
 
@@ -101,6 +114,78 @@ public class AnagramFinder {
         .collect(toMap(identity(), t -> anagramMap.get(t)));
 
     return combosAndAnagrams;
+  }
+
+  // the key to the outer-most map is the number of new center tiles used
+  // the next map is keyed by the original "current" word that is being transformed
+  // if we only want words that require one letter, we will get a map as the value of key "1", with each word and all of its derived extensions.
+
+  public Map<Integer, Map<String, MergeAttempt>> findAllExtensions(String inPlay, List<String> capturedWords) {
+    for (String capturedWord : capturedWords) {
+      gatherAllPossibleMergesForWord(capturedWord, inPlay); // I don't need this mapped yet, eventually I can group all the merge attempts by number of free tiles
+    }
+    return new HashMap<>(); //TODO FINISH
+  }
+
+  private Map<Integer, Set<MergeAttempt>> gatherAllPossibleMergesForWord(String word, String inPlay) {
+    Set<String> sortedTileCombos = getAllTileCombos(inPlay);
+    Map<Integer, Set<MergeAttempt>> validMergeAttempts =
+        sortedTileCombos.stream()
+            .map(c -> new MergeAttempt(word, c, INSTANCE))
+            .filter(MergeAttempt::isValid)
+            .collect(groupingBy(MergeAttempt::getNumberOfFreeTiles, mapping(identity(), toSet())));
+
+    return validMergeAttempts;
+  }
+
+  private Set<String> getAllTileCombosOfLengthK(String inPlay, int k) {
+    Set<String> sortedCombos = new HashSet<>();
+    int totalFreeTiles = inPlay.length();
+    inPlay = inPlay.toLowerCase();
+    char[] inPlayLetters = inPlay.toCharArray();
+    Arrays.sort(inPlayLetters);
+    Iterable<int[]> combinationIterator = new Combinations(totalFreeTiles, k);
+    for (int[] indices : combinationIterator) {
+      sortedCombos.add(getSubStringByIndices(inPlayLetters, indices));
+    }
+    return sortedCombos;
+  }
+
+  // I can make a more general version by taking tiles, a min, and max, then call it both from the
+  // standard 'fresh' word finder (involving minimum word length) or the merging finder, which can take 1 or more tiles from mid
+  // I've also made this to return a map keyed by number of letters used, rather than all the combos in one set.
+  // It can easily be made into one set with a stream-> flat map.
+  private Map<Integer, Set<String>> getAllTileCombosByLength(String inPlay) {
+    HashMap<Integer, Set<String>> sortedCombos = new HashMap<>();
+    int totalFreeTiles = inPlay.length();
+    inPlay = inPlay.toLowerCase();
+    char[] inPlayLetters = inPlay.toCharArray();
+    Arrays.sort(inPlayLetters);
+
+    for (int k = 1;  k <= totalFreeTiles; k += 1) {
+      sortedCombos.put(k, new HashSet<>());
+      Iterable<int[]> combinationIterator = new Combinations(totalFreeTiles, k);
+      for (int[] indices : combinationIterator) {
+        sortedCombos.get(k).add((getSubStringByIndices(inPlayLetters, indices)));
+      }
+    }
+    return sortedCombos;
+  }
+
+  private Set<String> getAllTileCombos(String inPlay) {
+    Set<String> sortedCombos = new HashSet<>();
+    int totalFreeTiles = inPlay.length();
+    inPlay = inPlay.toLowerCase();
+    char[] inPlayLetters = inPlay.toCharArray();
+    Arrays.sort(inPlayLetters);
+
+    for (int k = 1;  k <= totalFreeTiles; k += 1) {
+      Iterable<int[]> combinationIterator = new Combinations(totalFreeTiles, k);
+      for (int[] indices : combinationIterator) {
+        sortedCombos.add(getSubStringByIndices(inPlayLetters, indices));
+      }
+    }
+    return sortedCombos;
   }
 
   private String getSubStringByIndices(char[] letters, int[] indices) {

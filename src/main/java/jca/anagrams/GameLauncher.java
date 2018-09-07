@@ -100,6 +100,13 @@ import jca.anagrams.AnagramSolvingService.AnagramFinder;
  *  SPECULATIVE:
  *  : s -> snug guns
  *
+ * For speculative, since you can end up with a lot of possibilities per word, you can use a format like this
+ *
+ * word:
+ *   <speculative letter> -> <new word/s>
+ *   <speculative letter> -> <new word>
+ *     ...
+ *
  *
  * Created by janstett on 1/19/17.
  */
@@ -112,7 +119,7 @@ public class GameLauncher {
 
     System.out.println("Building game");
     Instant startTime = Instant.now();
-    AnagramFinder anagramFinder = new AnagramFinder(dictionary); // eventually, either inject, or use an anagram module api instead of directly accessing anagram finder methods
+    AnagramFinder anagramFinder = AnagramFinder.buildAnagramFinder(dictionary); // eventually, either inject, or use an anagram module api instead of directly accessing anagram finder methods
     Map<String, Set<String>> sortedMultiplicityAnagramMap = anagramFinder.buildMultiplicityFilteredAnagramMap();
     Map<String, Set<String>> sortedWordLengthAnagramMap = anagramFinder.buildLengthFilteredAnagramMap();
     LetterSource letterSource = new LetterSource();
@@ -136,10 +143,12 @@ public class GameLauncher {
         case "standard":
           Standard standard = new Standard(dictionary, anagramFinder, letterSource, inPlay, input);
           standard.play();
+          System.out.println("Welcome back to main menu.");
           break;
         case "sandbox": //as in "peel"
           Sandbox sandbox = new Sandbox(dictionary, anagramFinder, letterSource, inPlay, input);
           sandbox.play();
+          System.out.println("Welcome back to main menu.");
           break;
         case "q":
         case "e":

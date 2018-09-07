@@ -21,9 +21,14 @@ public class WordCollection {
     return words.add(newWord);
   }
 
+  // returns each current word with a list of all of its unused anagrams (which are irrelevant for finding extensions)
   public Map<String, Set<String>> getCurrentAnagrams() {
     return words.stream()
         .collect(toMap(lc -> lc.getCurrentWord(), lc -> lc.getUnusedAnagrams(), (lc1, lc2) -> lc1));
+  }
+
+  public List<LetterCombination> getWords() {
+    return words;
   }
 
 

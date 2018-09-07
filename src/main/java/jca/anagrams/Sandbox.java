@@ -19,6 +19,7 @@ public class Sandbox {
   private LetterSource letterSource;
   private LetterCollection inPlay;
   private Scanner input;
+  private WordCollection capturedWords;
 
   int MINIMUM_WORD_LENGTH = 4;
 
@@ -34,7 +35,7 @@ public class Sandbox {
     System.out.println("Type '-words' to add to completed word collection.");
     System.out.println("Type '-tiles' to add letters to the middle.");
     System.out.println("Hit enter again to finish adding words/letters");
-    WordCollection myWords = new WordCollection(anagramFinder);
+    capturedWords = new WordCollection(anagramFinder);
     boolean gameRunning = true;
     int hintLevel = 0;
     while (gameRunning) {
@@ -67,7 +68,7 @@ public class Sandbox {
                   System.out.println("Word not in dictionary");
                   break;
                 }
-                myWords.addWord(newWord);
+                capturedWords.addWord(newWord);
                 break;
             }
           }
@@ -79,11 +80,11 @@ public class Sandbox {
           for (char c : inPlayCharacters) {
             inPlay.add(c);
           }
-          displayBoard(inPlay, myWords);
+          displayBoard(inPlay, capturedWords);
           System.out.println("Letters have been added.");
           break;
         case "current anagrams":
-          Map<String, Set<String>> currentAnagrams = myWords.getCurrentAnagrams();
+          Map<String, Set<String>> currentAnagrams = capturedWords.getCurrentAnagrams();
           if (currentAnagrams.isEmpty()) {
             System.out.println("No anagrams from current words.");
           }
@@ -111,6 +112,14 @@ public class Sandbox {
           }
       }
     }
+  }
+
+  // go through each number of addon tiles: 1,2,3---> until end
+  private void displayAllExtensionsFromFreeTiles() {
+    for (LetterCombination word : capturedWords.getWords()) {
+
+    }
+
   }
 
   private static void displayBoard(LetterCollection inPlay, WordCollection myWords) {
