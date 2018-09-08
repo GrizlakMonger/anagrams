@@ -119,22 +119,50 @@ public class AnagramFinder {
   // the key to the outer-most map is the number of new center tiles used
   // the next map is keyed by the original "current" word that is being transformed
   // if we only want words that require one letter, we will get a map as the value of key "1", with each word and all of its derived extensions.
-
-  public Map<Integer, Map<String, MergeAttempt>> findAllExtensions(String inPlay, List<String> capturedWords) {
+  // changed it to not return the map by added tiles. Eventually I can use a stream->filter to get the map of maps, keyed by number
+  // of new tiles. That way you can ask "only 1 letter additions", for example, or sort the display results
+  // under different headings, for number of added tiles
+  public Map<String, Set<MergeAttempt>> findAllExtensionsWithoutWordMerges(String inPlay, List<String> capturedWords) {
+    Map<String, Set<MergeAttempt>> mergesByBaseWord = new HashMap<>();
     for (String capturedWord : capturedWords) {
-      gatherAllPossibleMergesForWord(capturedWord, inPlay); // I don't need this mapped yet, eventually I can group all the merge attempts by number of free tiles
+      Set<MergeAttempt> merges = getAllValidTileAdditionsForWord(capturedWord, inPlay); // I don't need this mapped yet, eventually I can group all the merge attempts by number of free tiles
+      mergesByBaseWord.put(capturedWord, merges);
     }
-    return new HashMap<>(); //TODO FINISH
+    return mergesByBaseWord;
   }
 
-  private Map<Integer, Set<MergeAttempt>> gatherAllPossibleMergesForWord(String word, String inPlay) {
+  public Set<MergeAttempt> findAllExtensions(String inPlay, List<String> capturedWords) {
+    Set<MergeAttempt> merges = new HashSet<>();
+    for (String capturedWord : capturedWords) {
+      List<String> otherCapturedWords = capturedWords.stream().collect(toList());
+      otherCapturedWords.remove(capturedWord);
+      merges.addAll(getAllValidMergesForWord(capturedWord, inPlay, otherCapturedWords)); // I don't need this mapped yet, eventually I can group all the merge attempts by number of free tiles
+    }
+    return merges;
+  }
+
+  private Set<MergeAttempt> getAllValidTileAdditionsForWord(String word, String inPlay) {
     Set<String> sortedTileCombos = getAllTileCombos(inPlay);
-    Map<Integer, Set<MergeAttempt>> validMergeAttempts =
+    Set<MergeAttempt> validMergeAttempts =
         sortedTileCombos.stream()
             .map(c -> new MergeAttempt(word, c, INSTANCE))
             .filter(MergeAttempt::isValid)
-            .collect(groupingBy(MergeAttempt::getNumberOfFreeTiles, mapping(identity(), toSet())));
+            .collect(toSet());
+    return validMergeAttempts;
+  }
 
+  private Set<MergeAttempt> getAllValidMergesForWord(String word, String inPlay, List<String> otherWords) {
+    Set<String> sortedTileCombos = getAllTileCombos(inPlay);
+    Set<List<String>> sortedWordCombos = getAllWordCombos(otherWords);
+    Set<MergeAttempt> mergeAttempts = new HashSet<>();
+    for (String tileCombo : sortedTileCombos) {
+      for (List<String> wordCombo : sortedWordCombos) {
+        mergeAttempts.add(new MergeAttempt(word, tileCombo, wordCombo, INSTANCE));
+      }
+    }
+    Set<MergeAttempt> validMergeAttempts = mergeAttempts.stream()
+        .filter(MergeAttempt::isValid)
+        .collect(toSet());
     return validMergeAttempts;
   }
 
@@ -188,12 +216,36 @@ public class AnagramFinder {
     return sortedCombos;
   }
 
+  private Set<List<String>> getAllWordCombos(List<String> words) {
+    Set<List<String>> sortedCombos = new HashSet<>();
+    int totalWords = words.size();
+    String[] wordArray = words.toArray(new String[totalWords]);
+    Arrays.sort(wordArray);
+
+    for (int k = 0;  k <= 3; k += 1) { //start at 0, so we can get the empty set: to make mergeAttempt creation easier
+      Iterable<int[]> combinationIterator = new Combinations(totalWords, k);
+      for (int[] indices : combinationIterator) {
+        sortedCombos.add(getSubListByIndices(wordArray, indices));
+      }
+    }
+    return sortedCombos;
+  }
+
   private String getSubStringByIndices(char[] letters, int[] indices) {
     char[] subarray = new char[indices.length];
     for (int i = 0; i < indices.length; i += 1) {
       subarray[i] = letters[indices[i]];
     }
     return new String(subarray);
+  }
+
+  private List<String> getSubListByIndices(String[] wordArray, int[] indices) {
+    String[] subArray = new String[indices.length];
+    for (int i = 0; i < indices.length; i += 1) {
+      subArray[i] = wordArray[indices[i]];
+    }
+    return Arrays.asList(subArray);
+
   }
 
   public Map<String, Set<String>> buildMultiplicityFilteredAnagramMap() {

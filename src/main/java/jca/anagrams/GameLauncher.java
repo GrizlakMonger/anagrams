@@ -96,6 +96,7 @@ import jca.anagrams.AnagramSolvingService.AnagramFinder;
  *  spear -> pears spare  (only shows unused anagrams in that letter combo history)
  *  join + t -> joint
  *  avenger + s c -> scavenger
+ *  team + team + s -> teammates  (this entry would appear twice for now (each instance acting as base word), can dedupe with later code
  *
  *  SPECULATIVE:
  *  : s -> snug guns

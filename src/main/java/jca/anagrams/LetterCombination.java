@@ -45,6 +45,7 @@ public class LetterCombination {
         .collect(Collectors.toSet());
   }
 
+  //use for hint mode where it asterisks changeable words
   public boolean hasUnusedAnagrams() {
     return wordHistory.containsAll(allPossibleAnagrams);
   }

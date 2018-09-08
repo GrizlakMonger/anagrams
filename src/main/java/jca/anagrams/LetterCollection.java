@@ -64,6 +64,7 @@ public class LetterCollection {
     return true;
   }
 
+  @Deprecated // same as getAllLettersAsString?
   public String asWordString() {
     StringBuilder stringBuilder = new StringBuilder(characters.size());
     for (Character character : characters) {

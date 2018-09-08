@@ -2,6 +2,7 @@ package jca.anagrams;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -12,7 +13,7 @@ public class MergeAttempt {
 
   private String baseWord;
   private String freeTiles;
-  private Set<String> fullWordMerges;
+  private List<String> fullWordMerges; // this should be a List, because you could potentially merge multiple of same word
   private String allLettersSorted;
   private Set<String> validWords;
   private boolean isValid;
@@ -20,10 +21,10 @@ public class MergeAttempt {
   // This seems like it could get malformed if I code it wrong though. I can use a builder that always applies the anagram finder.
 
   public MergeAttempt(String baseWord, String freeTiles, AnagramFinder anagramFinder) {
-    this(baseWord, freeTiles, Collections.emptySet(), anagramFinder);
+    this(baseWord, freeTiles, Collections.emptyList(), anagramFinder);
   }
 
-  public MergeAttempt(String baseWord, String freeTiles, Set<String> fullWordMerges, AnagramFinder anagramFinder) {
+  public MergeAttempt(String baseWord, String freeTiles, List<String> fullWordMerges, AnagramFinder anagramFinder) {
     this.baseWord = baseWord;
     this.freeTiles = freeTiles;
     this.fullWordMerges = fullWordMerges;
@@ -46,7 +47,7 @@ public class MergeAttempt {
     return freeTiles;
   }
 
-  public Set<String> getFullWordMerges() {
+  public List<String> getFullWordMerges() {
     return fullWordMerges;
   }
 
@@ -60,5 +61,23 @@ public class MergeAttempt {
 
   public String getSortedLetters() {
     return allLettersSorted;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append(baseWord + " ");
+    for (String mergedWord : fullWordMerges) {
+      sb.append("+ " + mergedWord + " ");
+    }
+    if (!freeTiles.isEmpty()) {
+      sb.append("+ ");
+      for (char c : freeTiles.toCharArray()) {
+        sb.append(c + " ");
+      }
+    }
+    sb.append("-> ");
+    sb.append(validWords.stream().collect(Collectors.joining(" ")));
+    return sb.toString();
   }
 }

@@ -1,5 +1,8 @@
 package jca.anagrams;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -45,6 +48,7 @@ public class Sandbox {
           System.out.println("'-words' : add words, hit enter after each word and again to finish");
           System.out.println("'-tiles' : add letters to middle, hit enter again to finish");
           System.out.println("'current anagrams' : show anagrams of individual captured words");
+          System.out.println("'extensions' : show all possible word extensions");
           System.out.println("dp, ds, dl : switch between plain, small, or large display style");
           System.out.println("q, e : quit/exit");
           System.out.println("h : next hint for current board");
@@ -84,22 +88,7 @@ public class Sandbox {
           System.out.println("Letters have been added.");
           break;
         case "current anagrams":
-          Map<String, Set<String>> currentAnagrams = capturedWords.getCurrentAnagrams();
-          if (currentAnagrams.isEmpty()) {
-            System.out.println("No anagrams from current words.");
-          }
-          for (Map.Entry<String, Set<String>> entry : currentAnagrams.entrySet()) {
-            String currentWord = entry.getKey();
-            Set<String> correspondingAnagrams = entry.getValue();
-            if (!correspondingAnagrams.isEmpty()) {
-              StringBuilder stringBuilder = new StringBuilder();
-              stringBuilder.append(currentWord);
-              stringBuilder.append("  ->  ");
-              String chainedAnagrams = correspondingAnagrams.stream().collect(Collectors.joining("  "));
-              stringBuilder.append(chainedAnagrams);
-              System.out.println(stringBuilder.toString());
-            }
-          }
+          displayCurrentAnagrams();
           break;
         case "in play":
           Map<String, Set<String>> anagramsByCombo = anagramFinder.findSubAnagrams(inPlay.getAllLettersAsString());
@@ -110,8 +99,62 @@ public class Sandbox {
               System.out.println(anagrams.stream().collect(Collectors.joining(" ")));
             }
           }
+          break;
+        case "tile extensions":
+          displayTileExtensions();
+          break;
+        case "analyze":
+          Instant start = Instant.now();
+          displayCurrentAnagrams();
+          displayAllExtensions();
+          Instant end = Instant.now();
+          Duration elapsedTime = Duration.between(start, end);
+          System.out.println("Analysis completed in " + (elapsedTime.getNano() / 1_000_000) + "ms.");
+          break;
+        default:
+          // fill in in case mistype?
+          break;
       }
     }
+  }
+
+  private void displayCurrentAnagrams() {
+    Map<String, Set<String>> currentAnagrams = capturedWords.getCurrentAnagrams();
+    if (currentAnagrams.isEmpty()) {
+      System.out.println("No anagrams from current words.");
+    } else {
+      System.out.println("ANAGRAMS OF CURRENT WORDS:");
+      for (Map.Entry<String, Set<String>> entry : currentAnagrams.entrySet()) {
+        String currentWord = entry.getKey();
+        Set<String> correspondingAnagrams = entry.getValue();
+        if (!correspondingAnagrams.isEmpty()) {
+          StringBuilder stringBuilder = new StringBuilder();
+          stringBuilder.append(currentWord);
+          stringBuilder.append("  ->  ");
+          String chainedAnagrams = correspondingAnagrams.stream().collect(Collectors.joining("  "));
+          stringBuilder.append(chainedAnagrams);
+          System.out.println(stringBuilder.toString());
+        }
+      }
+    }
+  }
+
+  private void displayTileExtensions() {
+    System.out.println("ALL TILE WORD EXTENSIONS:");
+    List<String> myWords = capturedWords.getWords().stream()
+        .map(LetterCombination::getCurrentWord)
+        .collect(Collectors.toList());
+    Map<String, Set<MergeAttempt>> allTileExtensions = anagramFinder.findAllExtensionsWithoutWordMerges(inPlay.getAllLettersAsString(), myWords);
+    allTileExtensions.values().stream().flatMap(set -> set.stream()).forEach(ma -> System.out.println(ma.toString()));
+  }
+
+  private void displayAllExtensions() {
+    System.out.println("ALL WORD EXTENSIONS:");
+    List<String> myWords = capturedWords.getWords().stream()
+        .map(LetterCombination::getCurrentWord)
+        .collect(Collectors.toList());
+    Set<MergeAttempt> allExtensions = anagramFinder.findAllExtensions(inPlay.getAllLettersAsString(), myWords);
+    allExtensions.stream().forEach(ma -> System.out.println(ma.toString()));
   }
 
   // go through each number of addon tiles: 1,2,3---> until end
