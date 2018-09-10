@@ -16,7 +16,6 @@ public class MergeAttempt {
   private List<String> fullWordMerges; // this should be a List, because you could potentially merge multiple of same word
   private String allLettersSorted;
   private Set<String> validWords;
-  private boolean isValid;
   private String potentialLetters;
   AnagramFinder anagramFinder; //should this have its own, or should the anagrams be sent in constructor at creation?
   // This seems like it could get malformed if I code it wrong though. I can use a builder that always applies the anagram finder.
@@ -40,9 +39,8 @@ public class MergeAttempt {
     this.anagramFinder = anagramFinder;
     this.potentialLetters = potentialLetters;
     String allLetters = baseWord + freeTiles + fullWordMerges.stream().collect(Collectors.joining()) + potentialLetters;
-    this.validWords = anagramFinder.findAnagrams(allLetters);
+    this.validWords = anagramFinder.findAnagrams(allLetters); // with a builder, I could just reject a word up front that is not valid
     this.allLettersSorted = WordUtils.sortString(allLetters);
-    this.isValid = !validWords.isEmpty(); // with a builder, I could just reject a word up front that is not valid
     this.potentialLetters = potentialLetters;
   }
 
@@ -67,7 +65,7 @@ public class MergeAttempt {
   }
 
   public boolean isValid() {
-    return isValid;
+    return !validWords.isEmpty();
   }
 
   public String getSortedLetters() {

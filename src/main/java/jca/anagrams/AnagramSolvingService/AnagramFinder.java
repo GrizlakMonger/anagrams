@@ -27,7 +27,7 @@ import static jca.anagrams.utils.WordUtils.sortString;
 // There aren't too many possible dictionaries, and maybe I can even use an enum corresponding to each dictionary.
 // Same for letter distributions.
 
-// I also want to make a bot that grabs words asap and run a simulation to see the most common words.
+// I also want to make a bot that grabs words from tiles as they become available and run a simulation to see the most common words.
 // I'll also do this with a simpler dictionary to avoid borderline/obscure words.
 
 // THIS SERVICE SHOULD NOT HAVE THE DICTIONARY! It uses the dictionary but shouldn't have its own.
@@ -70,7 +70,7 @@ public class AnagramFinder {
 
   final private Map<String, Set<String>> anagramMap;
   private int minimumWordLength = 4;
-  private final Set<String> commonEndings = Arrays.stream(new String[] {"d", "ed", "r", "er", "ers", "s", "ing", "ly"}).collect(toSet());
+  private final Set<String> commonEndings = Arrays.stream(new String[] {"d", "ed", "r", "er", "ers", "s", "es", "ing", "ly"}).collect(toSet());
 
   public Map<String, Set<String>> buildAnagramMap(Set<String> dictionary) {
     Map<String, Set<String>> anagramMap =
@@ -265,9 +265,10 @@ public class AnagramFinder {
   public Set<MergeAttempt> getAllPotentialWords(Set<String> words) {
     Set<MergeAttempt> merges = new HashSet<>();
     for (String word : words) {
-      merges.addAll(getAllPotentialsFromWord(word)); // I don't need this mapped yet, eventually I can group all the merge attempts by number of free tiles
+      merges.addAll(getAllPotentialsFromWord(word));
     }
-    return merges;
+    inflectionFilterHeuristic(merges);  // just added this, this will likely remove some actual valid derivations. If its removed, just return merges without stream.
+    return merges.stream().filter(MergeAttempt::isValid).collect(Collectors.toSet());
   }
 
   private Set<MergeAttempt> getAllPotentialsFromWord(String word) {
