@@ -126,6 +126,14 @@ public class Sandbox {
           elapsedTime = Duration.between(start, end);
           System.out.println("Analysis completed in " + (elapsedTime.getNano() / 100_000) + "ms.");
           break;
+        case "safe words":
+          // displaySafestWords() //write a method that goes through the dictionary, gets all words of less than 8 characters,
+          // then applies the "potential" to every word. We want to show the words with no results.
+          // I could also do one for volatile words (most letters that would steal it).
+          // need to map the mergeAttempts to their base word, and not filter out invalid ones.
+          // in fact, we want to filter out valid ones, so that we are left with base words that are most safe (and maybe display its valid anagrams)
+          // in short, we stream all merge attempts, group them by baseWord, then set the value to a count (or just keep a list of validMergeAttempts, then use .size() or something)
+          break;
         default:
           // fill in in case mistype?
           break;

@@ -70,7 +70,7 @@ public class AnagramFinder {
 
   final private Map<String, Set<String>> anagramMap;
   private int minimumWordLength = 4;
-  private final Set<String> commonEndings = Arrays.stream(new String[] {"d", "ed", "r", "er", "ers", "s", "es", "ing", "ly"}).collect(toSet());
+  private final Set<String> commonEndings = Arrays.stream(new String[] {"d", "ed", "r", "rs", "er", "ers", "s", "es", "ing", "ly"}).collect(toSet());
 
   public Map<String, Set<String>> buildAnagramMap(Set<String> dictionary) {
     Map<String, Set<String>> anagramMap =
@@ -267,8 +267,9 @@ public class AnagramFinder {
     for (String word : words) {
       merges.addAll(getAllPotentialsFromWord(word));
     }
-    inflectionFilterHeuristic(merges);  // just added this, this will likely remove some actual valid derivations. If its removed, just return merges without stream.
-    return merges.stream().filter(MergeAttempt::isValid).collect(Collectors.toSet());
+    inflectionFilterHeuristic(merges);  // just added this, this will likely remove some actual valid derivations. I can actually just add a boolean and let user choose which option, I should allow space delimited extra parameters to be used, but I need a more advanced parser
+    merges = merges.stream().filter(MergeAttempt::isValid).collect(Collectors.toSet());
+    return merges;
   }
 
   private Set<MergeAttempt> getAllPotentialsFromWord(String word) {

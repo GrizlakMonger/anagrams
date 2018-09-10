@@ -127,7 +127,9 @@ public class GameLauncher {
     LetterCollection inPlay = new LetterCollection();
     inPlay.setDisplayType(LetterCollection.DisplayType.LARGE);
     Instant endTime = Instant.now();
-    System.out.println(String.format("Game built in %s", (Duration.between(startTime, endTime).toString())));
+    long seconds = Duration.between(startTime, endTime).getSeconds();
+    long ms = Duration.between(startTime, endTime).getNano() / 1_000_000;
+    System.out.println(String.format("Game built in %ss%sms", seconds, ms));
 
     System.out.println("Enter 'standard' to play a normal game. Enter 'sandbox' to analyze custom scenarios.");
 
