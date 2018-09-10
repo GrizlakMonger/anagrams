@@ -1,5 +1,20 @@
 # anagrams
 
+
+9/10/2018
+
+Next, create a simple heuristic to rule out plurals, or different tenses. 
+For example, endings like -s, -d, -ed, -es, -ing can all be filtered out by a predicate in the stream.
+You look at the mergeAttempt, look at its baseword, then discard any merge attempt wordpossibilities that match
+the baseword + heuristic. Then run an isValid filter again in case you eliminated the last possible word
+for that letter collection
+
+
+Other interesting stats to look at.
+Start keeping track of words that games tend to end with. Its good to know those words and their
+evolutions.
+
+
 NEXT STEPS (9/6/2018)
 in plain English
 

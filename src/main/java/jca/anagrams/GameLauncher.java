@@ -120,14 +120,14 @@ public class GameLauncher {
 
     System.out.println("Building game");
     Instant startTime = Instant.now();
+    LetterSource letterSource = new LetterSource();
     AnagramFinder anagramFinder = AnagramFinder.buildAnagramFinder(dictionary); // eventually, either inject, or use an anagram module api instead of directly accessing anagram finder methods
     Map<String, Set<String>> sortedMultiplicityAnagramMap = anagramFinder.buildMultiplicityFilteredAnagramMap();
     Map<String, Set<String>> sortedWordLengthAnagramMap = anagramFinder.buildLengthFilteredAnagramMap();
-    LetterSource letterSource = new LetterSource();
     LetterCollection inPlay = new LetterCollection();
     inPlay.setDisplayType(LetterCollection.DisplayType.LARGE);
     Instant endTime = Instant.now();
-    System.out.println(String.format("Game built in %s nanoseconds", (Duration.between(startTime, endTime).getNano())));
+    System.out.println(String.format("Game built in %s", (Duration.between(startTime, endTime).toString())));
 
     System.out.println("Enter 'standard' to play a normal game. Enter 'sandbox' to analyze custom scenarios.");
 

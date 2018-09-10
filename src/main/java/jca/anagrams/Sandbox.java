@@ -2,6 +2,7 @@ package jca.anagrams;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -14,6 +15,11 @@ import jca.anagrams.AnagramSolvingService.AnagramFinder;
 // unless user wants to ignore letter constraints altogether and just explore words
 // the next case I want to add is to go through each word and see what words can be made
 // by adding every combination of middle tiles to it. Do not include "standing anagrams", or anagrams that take no extra tiles
+// 'chances' command can show the probability of any of the tiles being next GIVEN the current tile usage
+// this might not be as generally applicable because of the randomness of it. Giving an unweighted "potential"
+// separates out concerns: here are possible English words-you sort out the likelihood (or I can give the likelihood based
+// on the game distribution, but just exclude the existing letters for the word to be transformed)
+
 
 public class Sandbox {
 
@@ -24,7 +30,7 @@ public class Sandbox {
   private Scanner input;
   private WordCollection capturedWords;
 
-  int MINIMUM_WORD_LENGTH = 4;
+  int MINIMUM_WORD_LENGTH = 4;  // normally 4, but use other values to explore words
 
   public Sandbox(Set<String> dictionary, AnagramFinder anagramFinder, LetterSource letterSource, LetterCollection inPlay, Scanner input) {
     this.dictionary = dictionary;
@@ -49,6 +55,8 @@ public class Sandbox {
           System.out.println("'-tiles' : add letters to middle, hit enter again to finish");
           System.out.println("'current anagrams' : show anagrams of individual captured words");
           System.out.println("'extensions' : show all possible word extensions");
+          System.out.println("'analyze' : show all possible actions on current board");
+          System.out.println("'potential' : show all letters that would allow new actions (does not consider remaining tile frequency)");
           System.out.println("dp, ds, dl : switch between plain, small, or large display style");
           System.out.println("q, e : quit/exit");
           System.out.println("h : next hint for current board");
@@ -68,7 +76,7 @@ public class Sandbox {
                   System.out.println("Word is too short");
                   break;
                 }
-                if (!dictionary.contains(newWord.toLowerCase())) {
+                if (!dictionary.contains(newWord.toLowerCase())) {   // comment out to search potentials on unfinished words
                   System.out.println("Word not in dictionary");
                   break;
                 }
@@ -109,7 +117,14 @@ public class Sandbox {
           displayAllExtensions();
           Instant end = Instant.now();
           Duration elapsedTime = Duration.between(start, end);
-          System.out.println("Analysis completed in " + (elapsedTime.getNano() / 1_000_000) + "ms.");
+          System.out.println("Analysis completed in " + (elapsedTime.getNano() / 100_000) + "ms.");
+          break;
+        case "potential":
+          start = Instant.now();
+          displayNewTilePotentialsForExistingWords();
+          end = Instant.now();
+          elapsedTime = Duration.between(start, end);
+          System.out.println("Analysis completed in " + (elapsedTime.getNano() / 100_000) + "ms.");
           break;
         default:
           // fill in in case mistype?
@@ -157,13 +172,24 @@ public class Sandbox {
     allExtensions.stream().forEach(ma -> System.out.println(ma.toString()));
   }
 
-  // go through each number of addon tiles: 1,2,3---> until end
-  private void displayAllExtensionsFromFreeTiles() {
-    for (LetterCombination word : capturedWords.getWords()) {
-
+  // this method only looks at existing words, and doesn't count center tiles towards progress
+  // I might want a new 'TileSimulator' class, since speculating tiles seems distinct from finding anagrams out of existing tiles
+  // For now I can mix the concerns but then I can refactor for clarity later.
+  public void displayNewTilePotentialsForExistingWords() {
+    Set<String> myWords = capturedWords.getWords().stream()
+        .map(LetterCombination::getCurrentWord)
+        .collect(Collectors.toSet());
+    Set<MergeAttempt> allPotentialWords = anagramFinder.getAllPotentialWords(myWords);
+    Map<Integer, List<MergeAttempt>> wordsByNewLetters = allPotentialWords.stream().collect(Collectors.groupingBy(MergeAttempt::getNumberOfSpeculativeLetters));
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<Integer, List<MergeAttempt>> entry : wordsByNewLetters.entrySet()) {
+      System.out.println("LETTERS NEEDED: " + entry.getKey());
+      entry.getValue().stream().sorted(Comparator.comparing(MergeAttempt::getBaseWord)).forEach(ma -> System.out.println(ma.toString()));
     }
 
   }
+  // write one like above, but that also considers existing extension potential, so if a need letter is in the middle,
+  // we point out that theres only one missing letter instead of 2 for a word.
 
   private static void displayBoard(LetterCollection inPlay, WordCollection myWords) {
     System.out.println("\n----------");

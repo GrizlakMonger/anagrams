@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 /**
  * Created by janstett on 1/19/17.
@@ -18,6 +19,13 @@ public class LetterSource {
 
   public LetterSource() {
     characterDistribution = setupCharacterDistribution();
+    characters = populateList(characterDistribution);
+    characterQueue = shuffleCharacters(characters);
+  }
+
+  // this is really hack, but this is how I will get max n characters in the standard bananagrams set
+  public LetterSource(int n) {
+    characterDistribution = setupCharacterDistributionWithNRepeats(n);
     characters = populateList(characterDistribution);
     characterQueue = shuffleCharacters(characters);
   }
@@ -43,6 +51,12 @@ public class LetterSource {
       }
     }
     return characters;
+  }
+
+  public String getAllCharactersAsString() {
+    return characters.stream()
+        .map(c -> c.toString())
+        .collect(Collectors.joining());
   }
 
   // default Bananagrams distribution
@@ -79,4 +93,15 @@ public class LetterSource {
 
     return distribution;
   }
+
+  private Map<Character, Integer> setupCharacterDistributionWithNRepeats(int n) {
+    Map<Character, Integer> originalDistribution = setupCharacterDistribution();
+    for (Map.Entry<Character, Integer> entry : originalDistribution.entrySet()) {
+      if (entry.getValue() > n) {
+        entry.setValue(n);
+      }
+    }
+    return originalDistribution;
+  }
+
 }

@@ -9,8 +9,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.math3.util.Combinations;
 
+import jca.anagrams.LetterSource;
 import jca.anagrams.MergeAttempt;
 
 import static java.util.stream.Collectors.*;
@@ -45,6 +48,8 @@ import static jca.anagrams.utils.WordUtils.sortString;
 public class AnagramFinder {
 
   private static AnagramFinder INSTANCE;
+  private String possibleLetters;
+  private Set<String> letterPotentialCombos;
 
   public static AnagramFinder buildAnagramFinder(Set<String> dictionary) {
     if (INSTANCE == null) {
@@ -59,10 +64,13 @@ public class AnagramFinder {
 
   private AnagramFinder(Set<String> dictionary) {
     this.anagramMap = buildAnagramMap(dictionary);
+    this.possibleLetters = new LetterSource().getAllCharactersAsString().toLowerCase();
+    setAllPotentialLetterCombos(4); // more than 3 characters is unlikely to get in game (5 takes over 30 seconds to load though)
   }
 
   final private Map<String, Set<String>> anagramMap;
   private int minimumWordLength = 4;
+  private final Set<String> commonEndings = Arrays.stream(new String[] {"d", "ed", "r", "er", "ers", "s", "ing", "ly"}).collect(toSet());
 
   public Map<String, Set<String>> buildAnagramMap(Set<String> dictionary) {
     Map<String, Set<String>> anagramMap =
@@ -179,6 +187,7 @@ public class AnagramFinder {
     return sortedCombos;
   }
 
+
   // I can make a more general version by taking tiles, a min, and max, then call it both from the
   // standard 'fresh' word finder (involving minimum word length) or the merging finder, which can take 1 or more tiles from mid
   // I've also made this to return a map keyed by number of letters used, rather than all the combos in one set.
@@ -218,11 +227,15 @@ public class AnagramFinder {
 
   private Set<List<String>> getAllWordCombos(List<String> words) {
     Set<List<String>> sortedCombos = new HashSet<>();
+    if (words.isEmpty()) {
+      return sortedCombos;
+    }
     int totalWords = words.size();
     String[] wordArray = words.toArray(new String[totalWords]);
     Arrays.sort(wordArray);
 
-    for (int k = 0;  k <= 3; k += 1) { //start at 0, so we can get the empty set: to make mergeAttempt creation easier
+    int maxComboSize = totalWords < 3 ? totalWords : 3;
+    for (int k = 0;  k <= maxComboSize; k += 1) { //start at 0, so we can get the empty set: to make mergeAttempt creation easier
       Iterable<int[]> combinationIterator = new Combinations(totalWords, k);
       for (int[] indices : combinationIterator) {
         sortedCombos.add(getSubListByIndices(wordArray, indices));
@@ -246,6 +259,38 @@ public class AnagramFinder {
     }
     return Arrays.asList(subArray);
 
+  }
+
+  // similar to the "allExtensions" method
+  public Set<MergeAttempt> getAllPotentialWords(Set<String> words) {
+    Set<MergeAttempt> merges = new HashSet<>();
+    for (String word : words) {
+      merges.addAll(getAllPotentialsFromWord(word)); // I don't need this mapped yet, eventually I can group all the merge attempts by number of free tiles
+    }
+    return merges;
+  }
+
+  private Set<MergeAttempt> getAllPotentialsFromWord(String word) {
+    Set<MergeAttempt> validMergeAttempts = letterPotentialCombos.stream()
+        .map(combo -> new MergeAttempt(word, INSTANCE, combo))
+        .filter(MergeAttempt::isValid)
+        .collect(Collectors.toSet());
+    return validMergeAttempts;
+  }
+
+  private void setAllPotentialLetterCombos(int n) {
+    Set<String> sortedCombos = new HashSet<>();
+    int totalPotentialLetters = possibleLetters.length();
+    char[] potentialLetters = possibleLetters.toCharArray();
+    Arrays.sort(potentialLetters);
+
+    for (int k = 1;  k <= n; k += 1) {
+      Iterable<int[]> combinationIterator = new Combinations(totalPotentialLetters, k);
+      for (int[] indices : combinationIterator) {
+        sortedCombos.add(getSubStringByIndices(potentialLetters, indices));
+      }
+    }
+    this.letterPotentialCombos = sortedCombos;
   }
 
   public Map<String, Set<String>> buildMultiplicityFilteredAnagramMap() {
@@ -272,12 +317,22 @@ public class AnagramFinder {
     return sortedAnagramMap;
   }
 
-  //TODO finish a brute force method of every permutation, even if it would perform bad, just as exercise. Would recursive method be ok, or should it be done iteratively?
-  //TODO should I reuse the same string builder?
-  //TODO I should not look up a solution for this. I ought to be able to find all permutations of a string on my own.
-  //TODO This can be broken into two tasks. One is to find all inclusive anagrams (using all letters).
-  //TODO The other is to break a group of letters into each possible proper subset of letters.
+  //inflection in the grammatical sense: an ending to a word to change its grammatical use (based on same semantic root)
+  private void inflectionFilterHeuristic(Set<MergeAttempt> mergeAttempts) {
+    for (MergeAttempt mergeAttempt : mergeAttempts) {
+      String baseWord = mergeAttempt.getBaseWord();
+      Set<String> baseWordInflections = getWordInflections(baseWord);
+      mergeAttempt.getValidWords().removeAll(baseWordInflections);
+    }
+  }
 
-  //TODO once I have all permutations I can then filter based on if the dictionary contains that String (just use java stream, possibly concurrent?)
+  // only a heuristic, I'm sure there are words that just add a letter but aren't semantically related
+  private Set<String> getWordInflections(String word) {
+    Set<String> wordInflections = new HashSet<>();
+    for (String ending : commonEndings) {
+      wordInflections.add(word + ending);
+    }
+    return wordInflections;
+  }
 
 }
