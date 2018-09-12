@@ -1,0 +1,293 @@
+Volatile Words
+
+
+
+AEST (19)
+insight: this word has one of the highest anagram counts for a 4 letter word,
+so even before another tile is flipped it can be volatile.
+HOWEVER, seeing that its also extremely volatile to future flips, it
+is probably NOT worth trying to hard to secure it (other than to exhaust
+the base words to avoid future steals- even though these words don't have many derivations - seated, sated, seats, sates
+some of these derivations themselves can be blocked by claiming "sate" - sated, sates)
+
+east eats etas sate seat teas  (add tase to dictionary?)
+b c d e f g h k l m p r s t u v w x y
+!highest probability letters
+
+b -> baste beast
+c -> caste
+!d -> sated *
+!e -> tease
+f -> feast
+g -> stage
+h -> haste
+k -> stake steak skate
+l -> stale steal least slate
+m -> steam
+p -> paste spate
+!r -> resat stare
+!s -> asset
+!t -> taste state
+!u -> saute
+v -> stave
+w -> waste sweat
+x -> taxes
+y -> yeast
+
+*(can get blocked if "sate" is taken though)
+
+EIRT
+rite, tier, tire
+!a -> irate
+b -> tribe
+d -> tried
+f -> refit
+g -> tiger
+h -> their
+k -> trike
+m -> remit merit
+!n -> inter inert
+p -> tripe
+!r -> trier
+!s -> tries
+!t -> trite
+u -> uteri
+v -> rivet
+w -> write
+
+AERT (14)
+rate, tear, tare
+c -> trace cater react crate
+d -> tread trade
+e -> eater
+f -> after
+g -> grate great
+h -> earth heart
+i -> irate
+l -> alert alter
+p -> prate
+s -> resat stare
+t -> treat tater
+v -> avert
+w -> water
+x -> extra
+
+
+ACER (14)
+acre, care, race
+
+b -> caber brace
+!d -> cedar cadre arced
+f -> farce
+g -> grace
+h -> reach
+k -> creak
+l -> clear
+m -> cream
+!n -> crane
+p -> recap crape
+!s -> scare
+!t -> trace cater react crate
+v -> carve crave
+z -> craze
+
+
+AEGR (14)
+gear, rage
+
+b -> barge
+c -> grace
+!d -> grade
+!e -> eager agree
+l -> lager glare large regal
+m -> marge
+!n -> range anger
+p -> grape
+!s -> sarge
+!t -> grate great
+u -> argue auger
+v -> grave
+y -> gayer
+z -> graze
+
+
+ABEL (13)
+able, bale
+
+b -> babel
+c -> cable
+d -> blade
+f -> fable
+g -> gable bagel
+k -> bleak
+l -> label
+m -> amble blame
+r -> blare
+s -> blase sable
+t -> bleat table
+y -> belay
+z -> blaze
+
+
+AELR (13)
+earl
+b -> blare
+c -> clear
+d -> alder
+f -> flare feral
+g -> lager glare large regal
+m -> realm
+n -> renal learn
+p -> pearl
+s -> laser
+t -> alert alter
+v -> velar ravel
+x -> relax laxer
+y -> relay early layer
+
+AERS (13) (potent word)
+ares, ears, eras
+b -> saber sabre
+c -> scare
+e -> erase saree
+g -> sarge
+h -> shear share
+i -> arise raise
+l -> laser
+m -> smear
+n -> snare
+o -> arose
+p -> spear parse spare
+t -> resat stare
+w -> swear
+
+ADER (13)
+dare, dear
+b -> bread debar
+c -> cedar cadre arced
+d -> adder dread
+g -> grade
+i -> aired
+k -> drake
+l -> alder
+m -> dream armed
+o -> adore
+p -> padre drape
+r -> drear
+t -> tread trade
+y -> ready deary
+
+ADEL (12)
+dale, deal
+b -> blade
+c -> decal
+d -> addle
+g -> glade
+i -> ideal ailed
+l -> ladle
+m -> medal
+n -> laden
+p -> pedal
+r -> alder
+t -> dealt delta
+y -> delay
+
+DEIR (12)  - many -ride endings
+dire
+a -> aired
+b -> bride
+c -> cried cider
+d -> redid dried
+f -> fried
+g -> dirge ridge
+k -> irked
+p -> pride pried
+r -> drier
+s -> dries
+t -> tried
+v -> drive
+
+
+ACHT (12)   many -atch endings
+chat
+b -> batch
+c -> catch
+e -> cheat teach
+h -> hatch
+i -> aitch
+l -> latch
+m -> match
+n -> chant natch
+p -> patch
+r -> chart
+w -> watch
+y -> yacht
+
+
+AELS (11)
+ales, sale
+b -> blase sable
+c -> scale
+e -> easel lease
+f -> false
+h -> shale leash
+i -> aisle
+k -> slake
+p -> lapse sepal
+r -> laser
+t -> stale steal least slate
+v -> slave salve
+
+ALLY (11)
+ally
+a -> allay
+b -> bally
+d -> dally
+e -> alley
+o -> alloy loyal
+p -> pally
+r -> rally
+s -> sally
+t -> tally
+w -> wally
+x -> laxly
+
+AEPS (11)
+apes apse(concave part of church, often for the choir)
+c -> space
+d -> spade
+h -> phase shape
+i -> sepia
+k -> spake speak
+l -> lapse sepal
+n -> aspen
+r -> spear parse spare
+s -> passe
+t -> paste spate
+u -> pause
+
+DEIL (11)
+deli
+a -> ideal ailed
+e -> elide
+f -> field
+g -> glide
+o -> oiled oldie
+p -> plied
+s -> sidle slide
+t -> tilde
+v -> devil
+w -> wield
+y -> yield
+
+
+Notable Patterns
+ many words that end in are also have valid words with are (dale, dare, bale, bare etc)
+and also deal, dear, seal sear
+
+Rather than alphabetically sorting, I think 4 tile words
+become more apparent when I group by vowels and consonants.
+The most common division is two vowels and two consonants.
+
+When it comes to volatility, having A and E in a word
+tends to allow for the most wet word on its own and most potent word for futures.

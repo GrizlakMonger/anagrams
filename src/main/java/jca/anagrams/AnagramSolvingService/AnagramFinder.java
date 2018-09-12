@@ -65,7 +65,8 @@ public class AnagramFinder {
   private AnagramFinder(Set<String> dictionary) {
     this.anagramMap = buildAnagramMap(dictionary);
     this.possibleLetters = new LetterSource().getAllCharactersAsString().toLowerCase();
-    setAllPotentialLetterCombos(4); // more than 3 characters is unlikely to get in game (5 takes over 30 seconds to load though)
+    setAllPotentialLetterCombos(3); // more than 3 characters is unlikely to get in game (5 takes over 30 seconds to load though)
+    // I like to use one character when doing a very broad analysis on many words
   }
 
   final private Map<String, Set<String>> anagramMap;
@@ -272,12 +273,57 @@ public class AnagramFinder {
     return merges;
   }
 
+  public Set<MergeAttempt> getCrazyWords(Set<String> allWords) {
+    Set<MergeAttempt> merges = new HashSet<>();
+    for (String word : allWords) {
+      merges.addAll(getAllPotentialsFromWord(word));
+    }
+    inflectionFilterHeuristic(merges);  // just added this, this will likely remove some actual valid derivations. I can actually just add a boolean and let user choose which option, I should allow space delimited extra parameters to be used, but I need a more advanced parser
+    merges = merges.stream()
+        .filter(MergeAttempt::isValid)
+        .collect(groupingBy(MergeAttempt::getBaseWord))
+        .entrySet().stream().filter(entry -> entry.getValue().size() > 10)
+        .flatMap(entry -> entry.getValue().stream()).collect(toSet());
+    return merges;
+  }
+
+  public Set<MergeAttempt> getStableWords(Set<String> allWords) {
+    Set<MergeAttempt> merges = new HashSet<>();
+    for (String word : allWords) {
+      merges.addAll(getAllPotentialsFromWord(word));
+    }
+    Set<MergeAttempt> baseWords = allWords.stream()
+        .map(w -> new MergeAttempt(w, "", INSTANCE ))
+        .collect(toSet());
+    merges.addAll(baseWords);
+    inflectionFilterHeuristic(merges);  // just added this, this will likely remove some actual valid derivations. I can actually just add a boolean and let user choose which option, I should allow space delimited extra parameters to be used, but I need a more advanced parser
+    Set<MergeAttempt> stableWords = merges.stream()
+        .filter(MergeAttempt::isValid)
+        .collect(groupingBy(MergeAttempt::getBaseWord))
+        .entrySet().stream()
+        .filter(entry -> entry.getValue().size() == 1)
+        .flatMap(entry -> entry.getValue().stream()).collect(toSet());
+    return stableWords;
+  }
+
+  private boolean wordHasDerivations(Map.Entry<String, List<MergeAttempt>> wordEntries) {
+    return wordEntries.getValue().stream().filter(MergeAttempt::isValid).count() > 0;
+
+  }
+
   private Set<MergeAttempt> getAllPotentialsFromWord(String word) {
     Set<MergeAttempt> validMergeAttempts = letterPotentialCombos.stream()
         .map(combo -> new MergeAttempt(word, INSTANCE, combo))
         .filter(MergeAttempt::isValid)
         .collect(Collectors.toSet());
     return validMergeAttempts;
+  }
+
+  private Set<MergeAttempt> getAllPotentialsFromWordWithInvalid(String word) {
+    Set<MergeAttempt> allMergeAttempts = letterPotentialCombos.stream()
+        .map(combo -> new MergeAttempt(word, INSTANCE, combo))
+        .collect(Collectors.toSet());
+    return allMergeAttempts;
   }
 
   private void setAllPotentialLetterCombos(int n) {

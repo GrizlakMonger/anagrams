@@ -92,7 +92,7 @@ public class Sandbox {
           for (char c : inPlayCharacters) {
             inPlay.add(c);
           }
-          displayBoard(inPlay, capturedWords);
+          displayBoard();
           System.out.println("Letters have been added.");
           break;
         case "current anagrams":
@@ -126,7 +126,11 @@ public class Sandbox {
           elapsedTime = Duration.between(start, end);
           System.out.println("Analysis completed in " + (elapsedTime.getNano() / 100_000) + "ms.");
           break;
+        case "crazy words":
+          displayVolatileWords();
+          break;
         case "safe words":
+          displayStableWords();
           // displaySafestWords() //write a method that goes through the dictionary, gets all words of less than 8 characters,
           // then applies the "potential" to every word. We want to show the words with no results.
           // I could also do one for volatile words (most letters that would steal it).
@@ -194,17 +198,43 @@ public class Sandbox {
       System.out.println("LETTERS NEEDED: " + entry.getKey());
       entry.getValue().stream().sorted(Comparator.comparing(MergeAttempt::getBaseWord)).forEach(ma -> System.out.println(ma.toString()));
     }
+  }
+
+  public void displayVolatileWords() {
+    // instead of dictionary entries, I could also go by anagramMap keys, to avoid technical duplicates
+    Set<String> fourLetters = dictionary.stream()
+        .filter(word -> word.length() == 4)
+        .collect(Collectors.toSet());
+    Set<MergeAttempt> crazyWords = anagramFinder.getCrazyWords(fourLetters);
+    Map<Integer, List<MergeAttempt>> wordsByNewLetters = crazyWords.stream()
+        .collect(Collectors.groupingBy(MergeAttempt::getNumberOfSpeculativeLetters));
+    for (Map.Entry<Integer, List<MergeAttempt>> entry : wordsByNewLetters.entrySet()) {
+      System.out.println("LETTERS NEEDED: " + entry.getKey());
+      entry.getValue().stream()
+          .sorted(Comparator.comparing(MergeAttempt::getBaseWord).thenComparing(MergeAttempt::getPotentialLetters))  // example of "then comparing"
+          .forEach(ma -> System.out.println(ma.toString()));
+    }
+  }
+
+  public void displayStableWords() {
+    Set<String> filteredWords = dictionary.stream()
+        .filter(word -> word.length() == 6)
+        .collect(Collectors.toSet());
+    Set<MergeAttempt> stableWords = anagramFinder.getStableWords(filteredWords);
+    stableWords.stream().sorted(Comparator.comparing(MergeAttempt::getBaseWord))
+        .forEach(ma -> System.out.println(ma.toString()));
 
   }
+
   // write one like above, but that also considers existing extension potential, so if a need letter is in the middle,
   // we point out that theres only one missing letter instead of 2 for a word.
 
-  private static void displayBoard(LetterCollection inPlay, WordCollection myWords) {
+  private void displayBoard() {
     System.out.println("\n----------");
     System.out.println("Letters in play: \n" + inPlay);
     System.out.println();
-    if (!myWords.isEmpty()) {
-      System.out.println("Your words: \n" + myWords);
+    if (!capturedWords.isEmpty()) {
+      System.out.println("Your words: \n" + capturedWords);
       System.out.println();
     }
   }

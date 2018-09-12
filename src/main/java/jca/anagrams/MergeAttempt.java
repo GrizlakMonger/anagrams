@@ -80,6 +80,10 @@ public class MergeAttempt {
     return potentialLetters.length();
   }
 
+  public String getPotentialLetters() {
+    return potentialLetters;
+  }
+
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();

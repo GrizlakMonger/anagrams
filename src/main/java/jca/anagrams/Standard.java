@@ -1,5 +1,7 @@
 package jca.anagrams;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
@@ -14,6 +16,7 @@ public class Standard  {
   private LetterSource letterSource;
   private LetterCollection inPlay;
   private Scanner input;
+  private WordCollection myWords;
 
   int MINIMUM_WORD_LENGTH = 4;
 
@@ -23,12 +26,12 @@ public class Standard  {
     this.letterSource = letterSource;
     this.inPlay = inPlay;
     this.input = input;
+    this.myWords = new WordCollection(anagramFinder);
   }
 
 
   public void play() {
     System.out.println("Enter 'p' to flip a tile! \nType a word to claim it!");
-    WordCollection myWords = new WordCollection(anagramFinder);
     boolean gameRunning = true;
     int hintLevel = 0;
     while (gameRunning) {
@@ -94,6 +97,9 @@ public class Standard  {
           }
           hintLevel += 1;
           break;
+        case "f":
+          displayNewTilePotentialsForExistingWords();
+          break;
         case "-combos":
           anagramsByCombo = anagramFinder.findSubAnagrams(inPlay.getAllLettersAsString());
           if (anagramsByCombo.isEmpty()) {
@@ -141,6 +147,19 @@ public class Standard  {
           displayBoard(inPlay, myWords);
           break;
       }
+    }
+  }
+
+  public void displayNewTilePotentialsForExistingWords() {
+    Set<String> wordSet = myWords.getWords().stream()
+        .map(LetterCombination::getCurrentWord)
+        .collect(Collectors.toSet());
+    Set<MergeAttempt> allPotentialWords = anagramFinder.getAllPotentialWords(wordSet);
+    Map<Integer, List<MergeAttempt>> wordsByNewLetters = allPotentialWords.stream().collect(Collectors.groupingBy(MergeAttempt::getNumberOfSpeculativeLetters));
+    StringBuilder sb = new StringBuilder();
+    for (Map.Entry<Integer, List<MergeAttempt>> entry : wordsByNewLetters.entrySet()) {
+      System.out.println("LETTERS NEEDED: " + entry.getKey());
+      entry.getValue().stream().sorted(Comparator.comparing(MergeAttempt::getBaseWord)).forEach(ma -> System.out.println(ma.toString()));
     }
   }
 
