@@ -1,6 +1,17 @@
 I could find how many vowel combos go with each consonant pair for 4 letter words
 most common consonants ReTurN SuD  (RTNSD)
 
+also good for considerations
+https://en.wikipedia.org/wiki/Phonotactics
+knowing what consontant clusters are possible
+str-
+
+
+'a' and 'i' usually are adjacent in small words that contain both: 'ia' 'ai'.
+We often have '-air'  '-ail'.
+A few exceptions arid, lira (note that foreign words will usually be the ones to have CvCv when vv = ai/ia.
+
+
 simluations
 DV
 dive vied
@@ -51,6 +62,7 @@ these combos can appear at the start or middle of a word, or the end of a word w
 
 good to know:
 aeon (only one consonant)
+oboe (only one consonant)
 
 
 if an s is out, start looking for 3 letter word possibilities.

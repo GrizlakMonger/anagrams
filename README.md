@@ -1,5 +1,7 @@
 # anagrams
 
+9/12/2018
+Run an analysis of most common 2-4 letter word endings. These can be the keys to big words
 
 9/10/2018
 
